@@ -20,7 +20,10 @@ def main() -> None:
     if not app_url:
         raise SystemExit("VERCEL_APP_URL is required, for example https://your-app.vercel.app")
 
-    params = {"url": f"{app_url}/api/webhook"}
+    params = {
+        "url": f"{app_url}/api/webhook",
+        "drop_pending_updates": "true",
+    }
     if secret:
         params["secret_token"] = secret
 
@@ -38,4 +41,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

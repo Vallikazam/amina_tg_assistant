@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import asyncio
 import json
+import logging
 from http.server import BaseHTTPRequestHandler
-
-from aiogram.types import Update
 
 from bot.config import Settings
 from bot.factory import create_bot_dispatcher
+
+
+logger = logging.getLogger(__name__)
 
 
 class handler(BaseHTTPRequestHandler):
@@ -18,8 +20,10 @@ class handler(BaseHTTPRequestHandler):
         try:
             asyncio.run(self._handle_update())
         except PermissionError:
+            logger.exception("Telegram webhook rejected")
             self._send_json(403, {"ok": False, "error": "forbidden"})
         except Exception:
+            logger.exception("Telegram webhook failed")
             self._send_json(500, {"ok": False, "error": "internal_error"})
 
     async def _handle_update(self) -> None:
@@ -37,8 +41,7 @@ class handler(BaseHTTPRequestHandler):
 
         bot, dispatcher = await create_bot_dispatcher(settings)
         try:
-            update = Update.model_validate(update_data, context={"bot": bot})
-            await dispatcher.feed_update(bot, update)
+            await dispatcher.feed_raw_update(bot, update_data)
         finally:
             await bot.session.close()
 
@@ -51,4 +54,3 @@ class handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
-
