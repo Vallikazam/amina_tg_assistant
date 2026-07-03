@@ -14,10 +14,6 @@ logger = logging.getLogger(__name__)
 
 class handler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
-        if self.path.endswith("/debug"):
-            asyncio.run(self._handle_debug())
-            return
-
         self._send_json(200, {"ok": True, "service": "amina-telegram-webhook"})
 
     def do_POST(self) -> None:
@@ -50,25 +46,6 @@ class handler(BaseHTTPRequestHandler):
             await bot.session.close()
 
         self._send_json(200, {"ok": True})
-
-    async def _handle_debug(self) -> None:
-        settings = Settings.from_env()
-        settings.validate()
-
-        bot, _dispatcher = await create_bot_dispatcher(settings)
-        try:
-            await bot.get_me()
-        finally:
-            await bot.session.close()
-
-        self._send_json(
-            200,
-            {
-                "ok": True,
-                "database_path": settings.database_path,
-                "model": settings.gemini_model,
-            },
-        )
 
     def _send_json(self, status_code: int, payload: dict[str, object]) -> None:
         body = json.dumps(payload).encode("utf-8")
