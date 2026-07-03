@@ -5,7 +5,7 @@ from aiogram.types import Message
 
 from bot.config import Settings
 from bot.db import Database, ReminderRow, TodoRow
-from bot.keyboards import main_menu_keyboard
+from bot.keyboards import main_menu_keyboard, reminders_inline_keyboard, todos_inline_keyboard
 from bot.services.time_parser import (
     format_local,
     local_day_range,
@@ -39,7 +39,7 @@ async def todo_command(
     due_text = f"\nСрок: {due_at.strftime('%d.%m.%Y %H:%M')}" if due_at else ""
     await message.answer(
         f"Задача #{todo_id} добавлена: {title}{due_text}",
-        reply_markup=main_menu_keyboard(),
+        reply_markup=todos_inline_keyboard(await db.list_open_todos(user_id)),
     )
 
 
@@ -51,7 +51,7 @@ async def todos_command(message: Message, db: Database, settings: Settings) -> N
     todos = await db.list_open_todos(user_id)
     await message.answer(
         format_todos(todos, settings.app_timezone),
-        reply_markup=main_menu_keyboard(),
+        reply_markup=todos_inline_keyboard(todos),
     )
 
 
@@ -67,7 +67,7 @@ async def done_command(message: Message, command: CommandObject, db: Database) -
     user_id = await db.upsert_user(message.from_user)
     done = await db.mark_todo_done(user_id, todo_id)
     text = f"Задача #{todo_id} выполнена." if done else "Не нашла такую открытую задачу."
-    await message.answer(text, reply_markup=main_menu_keyboard())
+    await message.answer(text, reply_markup=todos_inline_keyboard(await db.list_open_todos(user_id)))
 
 
 async def delete_todo_command(message: Message, command: CommandObject, db: Database) -> None:
@@ -82,7 +82,7 @@ async def delete_todo_command(message: Message, command: CommandObject, db: Data
     user_id = await db.upsert_user(message.from_user)
     deleted = await db.delete_todo(user_id, todo_id)
     text = f"Задача #{todo_id} удалена." if deleted else "Не нашла такую открытую задачу."
-    await message.answer(text, reply_markup=main_menu_keyboard())
+    await message.answer(text, reply_markup=todos_inline_keyboard(await db.list_open_todos(user_id)))
 
 
 async def remind_command(
@@ -111,7 +111,7 @@ async def remind_command(
     await message.answer(
         f"Напоминание #{reminder_id} создано: {title}\n"
         f"Когда: {remind_at.strftime('%d.%m.%Y %H:%M')}",
-        reply_markup=main_menu_keyboard(),
+        reply_markup=reminders_inline_keyboard(await db.list_pending_reminders(user_id)),
     )
 
 
@@ -123,7 +123,7 @@ async def reminders_command(message: Message, db: Database, settings: Settings) 
     reminders = await db.list_pending_reminders(user_id)
     await message.answer(
         format_reminders(reminders, settings.app_timezone),
-        reply_markup=main_menu_keyboard(),
+        reply_markup=reminders_inline_keyboard(reminders),
     )
 
 
@@ -139,7 +139,7 @@ async def cancel_reminder_command(message: Message, command: CommandObject, db: 
     user_id = await db.upsert_user(message.from_user)
     cancelled = await db.cancel_reminder(user_id, reminder_id)
     text = f"Напоминание #{reminder_id} отменено." if cancelled else "Не нашла такое активное напоминание."
-    await message.answer(text, reply_markup=main_menu_keyboard())
+    await message.answer(text, reply_markup=reminders_inline_keyboard(await db.list_pending_reminders(user_id)))
 
 
 async def today_command(message: Message, db: Database, settings: Settings) -> None:
@@ -151,7 +151,7 @@ async def today_command(message: Message, db: Database, settings: Settings) -> N
     todos = await db.list_todos_between(user_id, start, end)
     await message.answer(
         "Сегодня:\n" + format_todos(todos, settings.app_timezone),
-        reply_markup=main_menu_keyboard(),
+        reply_markup=todos_inline_keyboard(todos),
     )
 
 
@@ -164,7 +164,7 @@ async def week_command(message: Message, db: Database, settings: Settings) -> No
     todos = await db.list_todos_between(user_id, start, end)
     await message.answer(
         "Ближайшие 7 дней:\n" + format_todos(todos, settings.app_timezone),
-        reply_markup=main_menu_keyboard(),
+        reply_markup=todos_inline_keyboard(todos),
     )
 
 
@@ -209,4 +209,3 @@ def _parse_id(value: str | None) -> int | None:
         return None
 
     return int(value)
-

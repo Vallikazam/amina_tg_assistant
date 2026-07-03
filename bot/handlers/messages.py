@@ -8,6 +8,7 @@ from bot.handlers.callbacks import format_memory_text, help_text
 from bot.handlers.productivity import format_reminders, format_todos
 from bot.keyboards import (
     MAIN_MENU_ASK,
+    MAIN_MENU_CALENDAR,
     MAIN_MENU_HELP,
     MAIN_MENU_MEMORY,
     MAIN_MENU_REMINDERS,
@@ -16,6 +17,9 @@ from bot.keyboards import (
     MAIN_MENU_TODOS,
     MENU_TEXTS,
     main_menu_keyboard,
+    productivity_inline_keyboard,
+    reminders_inline_keyboard,
+    todos_inline_keyboard,
 )
 from bot.config import Settings
 from bot.services import AssistantService
@@ -88,7 +92,7 @@ async def handle_menu_text(
         todos = await db.list_open_todos(user_id)
         await message.answer(
             format_todos(todos, settings.app_timezone),
-            reply_markup=main_menu_keyboard(),
+            reply_markup=todos_inline_keyboard(todos),
         )
         return
 
@@ -97,7 +101,7 @@ async def handle_menu_text(
         todos = await db.list_todos_between(user_id, start, end)
         await message.answer(
             "Сегодня:\n" + format_todos(todos, settings.app_timezone),
-            reply_markup=main_menu_keyboard(),
+            reply_markup=todos_inline_keyboard(todos),
         )
         return
 
@@ -105,7 +109,14 @@ async def handle_menu_text(
         reminders = await db.list_pending_reminders(user_id)
         await message.answer(
             format_reminders(reminders, settings.app_timezone),
-            reply_markup=main_menu_keyboard(),
+            reply_markup=reminders_inline_keyboard(reminders),
+        )
+        return
+
+    if text == MAIN_MENU_CALENDAR:
+        await message.answer(
+            "Выбери действие:",
+            reply_markup=productivity_inline_keyboard(),
         )
         return
 
