@@ -1,0 +1,2 @@
+"""Telegram AI assistant package."""
+
