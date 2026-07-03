@@ -5,6 +5,8 @@ import json
 import logging
 from http.server import BaseHTTPRequestHandler
 
+from aiogram.types import Update
+
 from bot.config import Settings
 from bot.factory import create_bot_dispatcher
 
@@ -22,9 +24,16 @@ class handler(BaseHTTPRequestHandler):
         except PermissionError:
             logger.exception("Telegram webhook rejected")
             self._send_json(403, {"ok": False, "error": "forbidden"})
-        except Exception:
+        except Exception as error:
             logger.exception("Telegram webhook failed")
-            self._send_json(500, {"ok": False, "error": "internal_error"})
+            self._send_json(
+                500,
+                {
+                    "ok": False,
+                    "error": error.__class__.__name__,
+                    "message": str(error),
+                },
+            )
 
     async def _handle_update(self) -> None:
         settings = Settings.from_env()
@@ -41,7 +50,9 @@ class handler(BaseHTTPRequestHandler):
 
         bot, dispatcher = await create_bot_dispatcher(settings)
         try:
-            await dispatcher.feed_raw_update(bot, update_data)
+            await bot.get_me()
+            update = Update.model_validate(update_data, context={"bot": bot})
+            await dispatcher.feed_update(bot, update)
         finally:
             await bot.session.close()
 
