@@ -12,18 +12,21 @@ class Settings:
     gemini_api_key: str
     gemini_model: str
     database_path: str
+    telegram_webhook_secret: str
     history_limit: int
     max_response_chars: int
 
     @classmethod
     def from_env(cls) -> "Settings":
         load_dotenv()
+        default_database_path = "/tmp/assistant.sqlite3" if os.getenv("VERCEL") else "assistant.sqlite3"
 
         return cls(
             telegram_bot_token=os.getenv("TELEGRAM_BOT_TOKEN", "").strip(),
             gemini_api_key=os.getenv("GEMINI_API_KEY", "").strip(),
             gemini_model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip(),
-            database_path=os.getenv("DATABASE_PATH", "assistant.sqlite3").strip(),
+            database_path=os.getenv("DATABASE_PATH", default_database_path).strip(),
+            telegram_webhook_secret=os.getenv("TELEGRAM_WEBHOOK_SECRET", "").strip(),
             history_limit=_int_env("HISTORY_LIMIT", default=20, minimum=1, maximum=50),
             max_response_chars=_int_env(
                 "MAX_RESPONSE_CHARS",

@@ -65,3 +65,84 @@ python -m bot.main
 ## Дальше
 
 Для v2 можно добавить `/todo`, `/summary`, `/remind`, обработку файлов, webhook-деплой на Render и PostgreSQL.
+
+## Деплой на Vercel
+
+Vercel не запускает Telegram-бота через бесконечный `polling`. Для Vercel используется webhook:
+
+```text
+https://your-app.vercel.app/api/webhook
+```
+
+Локальный запуск через `python -m bot.main` остаётся без изменений.
+
+### 1. Добавь переменные окружения в Vercel
+
+В Vercel Project Settings -> Environment Variables добавь:
+
+```env
+TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
+GEMINI_API_KEY=your_gemini_api_key_here
+GEMINI_MODEL=gemini-2.5-flash
+TELEGRAM_WEBHOOK_SECRET=long_random_secret_here
+```
+
+`TELEGRAM_WEBHOOK_SECRET` должен быть одинаковым в Vercel и при регистрации webhook.
+
+### 2. Задеплой проект
+
+Через Vercel Dashboard импортируй GitHub-репозиторий или используй Vercel CLI:
+
+```bash
+vercel
+vercel --prod
+```
+
+После деплоя будет URL вида:
+
+```text
+https://your-app.vercel.app
+```
+
+### 3. Зарегистрируй webhook в Telegram
+
+Локально добавь в `.env`:
+
+```env
+VERCEL_APP_URL=https://your-app.vercel.app
+TELEGRAM_WEBHOOK_SECRET=тот_же_секрет_что_в_vercel
+```
+
+Затем выполни:
+
+```bash
+python -m scripts.set_webhook
+```
+
+Если всё хорошо, Telegram вернёт JSON с `"ok": true`.
+
+### 4. Проверь endpoint
+
+Открой в браузере:
+
+```text
+https://your-app.vercel.app/api/webhook
+```
+
+Ожидаемый ответ:
+
+```json
+{"ok": true, "service": "amina-telegram-webhook"}
+```
+
+После этого напиши боту в Telegram:
+
+```text
+/start
+```
+
+### Важно про SQLite на Vercel
+
+На Vercel SQLite в этом проекте используется только как демо-хранилище в `/tmp/assistant.sqlite3`. Оно не гарантирует постоянную память: история и `/remember` могут сбрасываться после перезапуска serverless-функции.
+
+Для стабильной памяти лучше заменить SQLite на внешний PostgreSQL, например Neon или Supabase.
