@@ -22,6 +22,7 @@ def main() -> None:
 
     params = {
         "url": f"{app_url}/api/webhook",
+        "allowed_updates": json.dumps(["message", "callback_query"]),
         "drop_pending_updates": "true",
     }
     if secret:
