@@ -5,11 +5,5 @@
       "maxDuration": 30,
       "excludeFiles": "{.venv/**,__pycache__/**,.pytest_cache/**,*.sqlite,*.sqlite3,*.db}"
     }
-  },
-  "crons": [
-    {
-      "path": "/api/cron/reminders",
-      "schedule": "* * * * *"
-    }
-  ]
+  }
 }

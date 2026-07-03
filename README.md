@@ -103,16 +103,22 @@ python -m bot.main
 2026-07-04 09:30
 ```
 
-На Vercel напоминания отправляет cron endpoint:
+На Vercel Hobby нельзя запускать cron каждую минуту: такие cron expressions валят deployment. Поэтому endpoint для напоминаний есть, но вызывать его лучше внешним бесплатным cron-сервисом, например cron-job.org:
 
 ```text
-/api/cron/reminders
+https://your-app.vercel.app/api/cron/reminders
 ```
 
-В `vercel.json` он настроен на запуск каждую минуту. Если используешь защиту cron, добавь в Vercel переменную:
+Поставь запуск раз в 1-5 минут. Если используешь защиту cron, добавь в Vercel переменную:
 
 ```env
 CRON_SECRET=long_random_secret_here
+```
+
+И в cron-сервисе добавь header:
+
+```text
+Authorization: Bearer long_random_secret_here
 ```
 
 Важно: SQLite на Vercel хранится во временной файловой системе. Для стабильных задач и напоминаний лучше подключить PostgreSQL, например Neon или Supabase.
