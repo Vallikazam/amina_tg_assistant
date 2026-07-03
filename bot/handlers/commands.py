@@ -11,6 +11,18 @@ from bot.services.safety import is_sensitive_memory
 router = Router(name="commands")
 
 
+def create_commands_router() -> Router:
+    fresh_router = Router(name="commands")
+    fresh_router.message(CommandStart())(start)
+    fresh_router.message(Command("help"))(help_command)
+    fresh_router.message(Command("ask"))(ask)
+    fresh_router.message(Command("reset"))(reset)
+    fresh_router.message(Command("remember"))(remember)
+    fresh_router.message(Command("memory"))(memory)
+    fresh_router.message(Command("forget"))(forget)
+    return fresh_router
+
+
 @router.message(CommandStart())
 async def start(message: Message, db: Database) -> None:
     if message.from_user is None:
@@ -119,4 +131,3 @@ async def forget(message: Message, db: Database) -> None:
     user_id = await db.upsert_user(message.from_user)
     await db.clear_memories(user_id)
     await message.answer("Память очищена.")
-

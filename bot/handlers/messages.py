@@ -9,6 +9,12 @@ from bot.services import AssistantService
 router = Router(name="messages")
 
 
+def create_messages_router() -> Router:
+    fresh_router = Router(name="messages")
+    fresh_router.message(F.text)(text_message)
+    return fresh_router
+
+
 @router.message(F.text)
 async def text_message(
     message: Message,
@@ -27,4 +33,3 @@ async def text_message(
     await message.bot.send_chat_action(message.chat.id, "typing")
     answer = await assistant.answer(user_id=user_id, prompt=text)
     await message.answer(answer)
-

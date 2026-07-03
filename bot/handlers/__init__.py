@@ -1,5 +1,4 @@
-from bot.handlers.commands import router as commands_router
-from bot.handlers.messages import router as messages_router
+from bot.handlers.commands import create_commands_router
+from bot.handlers.messages import create_messages_router
 
-__all__ = ["commands_router", "messages_router"]
-
+__all__ = ["create_commands_router", "create_messages_router"]
