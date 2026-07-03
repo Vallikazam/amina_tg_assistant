@@ -74,6 +74,8 @@ Vercel не запускает Telegram-бота через бесконечны
 https://your-app.vercel.app/api/webhook
 ```
 
+Endpoint реализован в `api/webhook/index.py`, потому что Vercel распознаёт `index.py` как Python entrypoint.
+
 Локальный запуск через `python -m bot.main` остаётся без изменений.
 
 ### 1. Добавь переменные окружения в Vercel
