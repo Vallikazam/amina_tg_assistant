@@ -5,6 +5,8 @@ from aiogram.filters import Command, CommandObject, CommandStart
 from aiogram.types import Message
 
 from bot.db import Database
+from bot.handlers.callbacks import format_memory_text, help_text
+from bot.keyboards import main_menu_keyboard, start_inline_keyboard
 from bot.services import AssistantService
 from bot.services.safety import is_sensitive_memory
 
@@ -31,22 +33,20 @@ async def start(message: Message, db: Database) -> None:
     await db.upsert_user(message.from_user)
     await message.answer(
         "Привет! Я Amina, AI-ассистент в Telegram.\n\n"
-        "Напиши вопрос обычным сообщением или используй /ask.\n"
-        "Память: /remember, /memory, /forget.\n"
-        "История диалога: /reset."
+        "Напиши вопрос обычным сообщением или выбери действие в меню снизу.",
+        reply_markup=main_menu_keyboard(),
+    )
+    await message.answer(
+        "Быстрые действия:",
+        reply_markup=start_inline_keyboard(),
     )
 
 
 @router.message(Command("help"))
 async def help_command(message: Message) -> None:
     await message.answer(
-        "Что я умею:\n"
-        "/ask <вопрос> — ответить через AI\n"
-        "/remember <факт> — сохранить полезный факт о тебе\n"
-        "/memory — показать память\n"
-        "/forget — очистить память\n"
-        "/reset — очистить историю диалога\n\n"
-        "Также можно просто отправить текст без команды."
+        help_text(),
+        reply_markup=main_menu_keyboard(),
     )
 
 
@@ -62,13 +62,16 @@ async def ask(
 
     prompt = (command.args or "").strip()
     if not prompt:
-        await message.answer("Напиши вопрос после команды: /ask как выучить Python?")
+        await message.answer(
+            "Напиши вопрос после команды: /ask как выучить Python?",
+            reply_markup=main_menu_keyboard(),
+        )
         return
 
     user_id = await db.upsert_user(message.from_user)
     await message.bot.send_chat_action(message.chat.id, "typing")
     answer = await assistant.answer(user_id=user_id, prompt=prompt)
-    await message.answer(answer)
+    await message.answer(answer, reply_markup=main_menu_keyboard())
 
 
 @router.message(Command("reset"))
@@ -78,7 +81,7 @@ async def reset(message: Message, db: Database) -> None:
 
     user_id = await db.upsert_user(message.from_user)
     await db.clear_messages(user_id)
-    await message.answer("История диалога очищена.")
+    await message.answer("История диалога очищена.", reply_markup=main_menu_keyboard())
 
 
 @router.message(Command("remember"))
@@ -92,19 +95,23 @@ async def remember(
 
     fact = (command.args or "").strip()
     if not fact:
-        await message.answer("Напиши факт после команды: /remember Я учу Python")
+        await message.answer(
+            "Напиши факт после команды: /remember Я учу Python",
+            reply_markup=main_menu_keyboard(),
+        )
         return
 
     if is_sensitive_memory(fact):
         await message.answer(
             "Я не буду сохранять пароли, токены, ключи, банковские данные "
-            "или чувствительные документы. Лучше держать это вне памяти бота."
+            "или чувствительные документы. Лучше держать это вне памяти бота.",
+            reply_markup=main_menu_keyboard(),
         )
         return
 
     user_id = await db.upsert_user(message.from_user)
     await db.add_memory(user_id, fact)
-    await message.answer("Запомнила.")
+    await message.answer("Запомнила.", reply_markup=main_menu_keyboard())
 
 
 @router.message(Command("memory"))
@@ -115,12 +122,7 @@ async def memory(message: Message, db: Database) -> None:
     user_id = await db.upsert_user(message.from_user)
     memories = await db.list_memories(user_id)
 
-    if not memories:
-        await message.answer("Память пока пустая.")
-        return
-
-    lines = "\n".join(f"{index}. {memory}" for index, memory in enumerate(memories, 1))
-    await message.answer(f"Вот что я помню:\n{lines}")
+    await message.answer(format_memory_text(memories), reply_markup=main_menu_keyboard())
 
 
 @router.message(Command("forget"))
@@ -130,4 +132,4 @@ async def forget(message: Message, db: Database) -> None:
 
     user_id = await db.upsert_user(message.from_user)
     await db.clear_memories(user_id)
-    await message.answer("Память очищена.")
+    await message.answer("Память очищена.", reply_markup=main_menu_keyboard())
