@@ -12,6 +12,14 @@
 - `/remember <факт>` для личной памяти
 - `/memory` для просмотра памяти
 - `/forget` для очистки памяти
+- `/todo <задача>` для добавления задачи
+- `/todos` для списка задач
+- `/done <id>` для отметки задачи выполненной
+- `/delete_todo <id>` для удаления задачи
+- `/remind <когда> <текст>` для напоминаний
+- `/reminders` для списка напоминаний
+- `/cancel_reminder <id>` для отмены напоминания
+- `/today` и `/week` для простого календаря задач
 - SQLite-база создаётся автоматически
 
 ## Быстрый старт
@@ -45,6 +53,7 @@ GEMINI_MODEL=gemini-2.5-flash
 DATABASE_PATH=assistant.sqlite3
 HISTORY_LIMIT=20
 MAX_RESPONSE_CHARS=3500
+APP_TIMEZONE=Asia/Qyzylorda
 ```
 
 5. Запусти бота локально:
@@ -64,7 +73,49 @@ python -m bot.main
 
 ## Дальше
 
-Для v2 можно добавить `/todo`, `/summary`, `/remind`, обработку файлов, webhook-деплой на Render и PostgreSQL.
+Для v2 можно добавить `/summary`, обработку файлов, webhook-деплой на Render и PostgreSQL.
+
+## Задачи, напоминания и календарь
+
+Команды:
+
+```text
+/todo купить продукты
+/todo завтра в 10:00 подготовить отчёт
+/todos
+/done 1
+/delete_todo 1
+/remind через 30 минут размяться
+/remind завтра в 09:00 созвон
+/reminders
+/cancel_reminder 1
+/today
+/week
+```
+
+Поддерживаемые форматы времени:
+
+```text
+через 30 минут
+через 2 часа
+сегодня в 18:30
+завтра в 10:00
+2026-07-04 09:30
+```
+
+На Vercel напоминания отправляет cron endpoint:
+
+```text
+/api/cron/reminders
+```
+
+В `vercel.json` он настроен на запуск каждую минуту. Если используешь защиту cron, добавь в Vercel переменную:
+
+```env
+CRON_SECRET=long_random_secret_here
+```
+
+Важно: SQLite на Vercel хранится во временной файловой системе. Для стабильных задач и напоминаний лучше подключить PostgreSQL, например Neon или Supabase.
 
 ## Деплой на Vercel
 
@@ -87,6 +138,7 @@ TELEGRAM_BOT_TOKEN=your_telegram_bot_token_here
 GEMINI_API_KEY=your_gemini_api_key_here
 GEMINI_MODEL=gemini-2.5-flash
 TELEGRAM_WEBHOOK_SECRET=long_random_secret_here
+APP_TIMEZONE=Asia/Qyzylorda
 ```
 
 `TELEGRAM_WEBHOOK_SECRET` должен быть одинаковым в Vercel и при регистрации webhook.

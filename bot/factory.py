@@ -25,7 +25,7 @@ async def create_bot_dispatcher(settings: Settings) -> tuple[Bot, Dispatcher]:
     )
 
     bot = Bot(token=settings.telegram_bot_token)
-    dispatcher = Dispatcher(db=db, assistant=assistant)
+    dispatcher = Dispatcher(db=db, assistant=assistant, settings=settings)
     dispatcher.include_router(create_commands_router())
     dispatcher.include_router(create_callbacks_router())
     dispatcher.include_router(create_messages_router())

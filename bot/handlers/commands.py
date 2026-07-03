@@ -6,6 +6,7 @@ from aiogram.types import Message
 
 from bot.db import Database
 from bot.handlers.callbacks import format_memory_text, help_text
+from bot.handlers.productivity import register_productivity_handlers
 from bot.keyboards import main_menu_keyboard, start_inline_keyboard
 from bot.services import AssistantService
 from bot.services.safety import is_sensitive_memory
@@ -22,6 +23,7 @@ def create_commands_router() -> Router:
     fresh_router.message(Command("remember"))(remember)
     fresh_router.message(Command("memory"))(memory)
     fresh_router.message(Command("forget"))(forget)
+    register_productivity_handlers(fresh_router)
     return fresh_router
 
 

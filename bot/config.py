@@ -13,6 +13,8 @@ class Settings:
     gemini_model: str
     database_path: str
     telegram_webhook_secret: str
+    cron_secret: str
+    app_timezone: str
     history_limit: int
     max_response_chars: int
 
@@ -26,6 +28,8 @@ class Settings:
             gemini_model=os.getenv("GEMINI_MODEL", "gemini-2.5-flash").strip(),
             database_path=_database_path_from_env(),
             telegram_webhook_secret=os.getenv("TELEGRAM_WEBHOOK_SECRET", "").strip(),
+            cron_secret=os.getenv("CRON_SECRET", "").strip(),
+            app_timezone=os.getenv("APP_TIMEZONE", "Asia/Qyzylorda").strip(),
             history_limit=_int_env("HISTORY_LIMIT", default=20, minimum=1, maximum=50),
             max_response_chars=_int_env(
                 "MAX_RESPONSE_CHARS",
