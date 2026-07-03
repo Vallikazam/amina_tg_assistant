@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from typing import Iterable
 
@@ -18,6 +19,10 @@ class Database:
         self.path = path
 
     async def init(self) -> None:
+        parent_dir = os.path.dirname(os.path.abspath(self.path))
+        if parent_dir:
+            os.makedirs(parent_dir, exist_ok=True)
+
         async with aiosqlite.connect(self.path) as db:
             await db.executescript(
                 """
@@ -175,4 +180,3 @@ class Database:
                 [(user_id, memory) for memory in memories],
             )
             await db.commit()
-
